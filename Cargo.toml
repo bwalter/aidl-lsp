@@ -1,0 +1,26 @@
+[package]
+name = "aidl-lsp"
+version = "0.3.0"
+authors = ["Benoit Walter <b.walter@meerun.de>"]
+license = "MIT"
+edition = "2021"
+description = "AIDL Language Server Protocol (LSP) server"
+repository = "https://github.com/bwalter/aidl-lsp"
+
+[dependencies]
+#aidl-parser = { path = "../aidl-parser" }
+aidl-parser = "0.3"
+anyhow = "1.0"
+crossbeam = "0.8"
+line-col = { version = "0.2", features = ["grapheme-clusters"] }
+lsp-server = "0.5"
+lsp-types = "0.91"
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"
+tracing = "0.1"
+tracing-subscriber = {version = "0.3", features = ["json"]}
+walkdir = "2.3"
+
+[dev-dependencies]
+insta = { version = "1.8", features = ["ron"] }

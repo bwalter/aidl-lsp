@@ -1,0 +1,62 @@
+{
+	"name": "aidl-lsp",
+	"description": "AIDL extension for vscode",
+	"author": "Benoit Walter",
+	"license": "MIT",
+	"version": "0.1.0",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/bwalter/aidl-lsp"
+	},
+	"publisher": "bwalter",
+	"categories": [],
+	"keywords": [],
+	"preview": true,
+	"engines": {
+		"vscode": "^1.52.0"
+	},
+	"activationEvents": [
+		"onLanguage:aidl"
+	],
+	"main": "./out/extension",
+	"contributes": {
+		"configuration": {},
+		"languages": [
+			{
+				"id": "aidl",
+				"aliases": [
+					"AIDL",
+          "aidl"
+				],
+				"extensions": [
+					".aidl"
+				],
+        "configuration": "./language-configuration.json"
+			}
+		],
+    "grammars": [{
+      "language": "aidl",
+      "scopeName": "source.aidl",
+      "path": "./aidl.tmLanguage.json"
+    }]
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -b ./",
+		"watch": "tsc -b -w",
+		"lint": "eslint ./src --ext .ts"
+	},
+	"dependencies": {
+		"vscode-languageclient": "^7.0.0"
+	},
+	"devDependencies": {
+		"@types/mocha": "^8.2.2",
+		"@types/node": "^12.12.0",
+		"@types/vscode": "^1.52.0",
+		"@typescript-eslint/eslint-plugin": "^4.23.0",
+		"@typescript-eslint/parser": "^4.23.0",
+		"eslint": "^7.26.0",
+		"mocha": "^8.3.2",
+		"typescript": "^4.4.3"
+	}
+}
