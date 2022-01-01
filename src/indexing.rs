@@ -3,11 +3,30 @@ use lsp_types::notification::Notification;
 use std::{fs::File, io::Read};
 use walkdir::WalkDir;
 
-use crate::{state::GlobalState, utils};
+use crate::{state::GlobalState, state::IndexingState, utils};
 
 pub fn index(global_state: &mut GlobalState) -> Result<()> {
-    // TODO: check and update state
+    if global_state.indexing_state == IndexingState::Indexing {
+        tracing::warn!("Cannot index: already indexing!");
+        return Ok(());
+    }
 
+    global_state.indexing_state = IndexingState::Indexing;
+
+    match do_index(global_state) {
+        Ok(()) => {
+            global_state.indexing_state = IndexingState::Indexed;
+        }
+        Err(e) => {
+            global_state.indexing_state = IndexingState::Error;
+            anyhow::bail!(e);
+        }
+    }
+
+    Ok(())
+}
+
+fn do_index(global_state: &mut GlobalState) -> Result<()> {
     let path = global_state
         .root_path
         .as_ref()
@@ -38,11 +57,11 @@ pub fn index(global_state: &mut GlobalState) -> Result<()> {
         Ok(()) as Result<()>
     })?;
 
-    global_state.file_results = global_state.parser.parse();
+    global_state.file_results = global_state.parser.validate();
     global_state.items_by_key = global_state
         .file_results
         .iter()
-        .filter_map(|(id, fr)| fr.file.as_ref().map(|f| (f.get_key(), id.clone())))
+        .filter_map(|(id, fr)| fr.ast.as_ref().map(|f| (f.get_key(), id.clone())))
         .collect();
 
     notify_diagnostics(global_state);
@@ -72,11 +91,11 @@ pub fn update_content(
     let parser = &mut global_state.parser;
 
     parser.add_content(uri.clone(), content);
-    global_state.file_results = parser.parse();
+    global_state.file_results = parser.validate();
     global_state.items_by_key = global_state
         .file_results
         .iter()
-        .filter_map(|(id, fr)| fr.file.as_ref().map(|f| (f.get_key(), id.clone())))
+        .filter_map(|(id, fr)| fr.ast.as_ref().map(|f| (f.get_key(), id.clone())))
         .collect();
 
     notify_diagnostics(global_state);

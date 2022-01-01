@@ -1,6 +1,6 @@
 [package]
 name = "aidl-lsp"
-version = "0.3.0"
+version = "0.1.0"
 authors = ["Benoit Walter <b.walter@meerun.de>"]
 license = "MIT"
 edition = "2021"
@@ -8,8 +8,7 @@ description = "AIDL Language Server Protocol (LSP) server"
 repository = "https://github.com/bwalter/aidl-lsp"
 
 [dependencies]
-#aidl-parser = { path = "../aidl-parser" }
-aidl-parser = "0.3"
+aidl-parser = "0.6"
 anyhow = "1.0"
 crossbeam = "0.8"
 line-col = { version = "0.2", features = ["grapheme-clusters"] }
