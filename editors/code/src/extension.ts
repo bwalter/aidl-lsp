@@ -9,11 +9,39 @@ import {
 
 let client: LanguageClient;
 
+function getProcessName(): string | null {
+    if (process.platform === "darwin") {
+        return "aidl-lsp-x86_64-apple-darwin";
+    }
+
+    if (process.platform === "linux") {
+        if (process.arch === "x64") {
+            return "aidl-lsp-x86_64-unknown-linux-gnu";
+        }
+
+        console.error("Unsupported linux arch:", process.arch);
+        return;
+    }
+
+    if (process.platform === "win32") {
+        return "aidl-lsp-x86_64-pc-windows-gnu.exe";
+    }
+
+    console.error("Unsupported platform:", process.platform);
+}
+
 export async function activate(context: vscode.ExtensionContext) {
 	// Local aidl-lsp (TODO: published path)
-	const serverModule = context.asAbsolutePath(
-		path.join('..', '..', 'target', 'debug', 'aidl-lsp')
-	);
+	//const serverModule = context.asAbsolutePath(
+	//	path.join('..', '..', 'target', 'debug', 'aidl-lsp')
+	//);
+
+  // Package aidl-lsp
+  const packageName = getProcessName();
+  if (getProcessName() == null) {
+      return;
+  }
+  const serverModule = path.join(context.extensionPath, 'bin', getProcessName());
 
 	// If the extension is launched in debug mode then the debug server options are used
 	// Otherwise the run options are used

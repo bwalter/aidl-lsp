@@ -1,0 +1,105 @@
+name: main
+
+on: [push, pull_request]
+
+jobs:
+  build_lsp:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact: aidl-lsp-x86_64-unknown-linux-gnu
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            artifact: aidl-lsp-x86_64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-gnu
+            artifact: aidl-lsp-x86_64-pc-windows-gnu.exe
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: ${{ matrix.target }}
+
+      - name: Set up Rust cache
+        uses: Swatinem/rust-cache@v1
+
+      - name: Cargo build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release --target ${{ matrix.target }}
+
+      - name: Cargo clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --release --all -- -D clippy::all
+
+      - name: Cargo test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+
+      - name: Create artifact folder
+        run: |
+            mkdir dist
+            cp target/${{ matrix.target }}/release/aidl-lsp dist/${{ matrix.artifact }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+            name: lsp-dist-${{ matrix.target }}
+            path: |
+                ./dist
+
+  build_vscode_ext:
+    needs: [build_lsp]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/download-artifact@v2
+      with:
+        name: lsp-dist-x86_64-unknown-linux-gnu
+        path: editors/code/bin
+    - uses: actions/download-artifact@v2
+      with:
+        name: lsp-dist-x86_64-apple-darwin
+        path: editors/code/bin
+    - uses: actions/download-artifact@v2
+      with:
+        name: lsp-dist-x86_64-pc-windows-gnu
+        path: editors/code/bin
+    - name: Set permission
+      run: chmod 755 editors/code/bin/*
+    - name: Setup Node.js
+      uses: actions/setup-node@v1
+      with:
+        node-version: '16'
+    - name: npm install
+      working-directory: editors/code
+      run: npm install
+    - name: publish to Visual Studio Marketplace
+      id: publishVsix
+      uses: HaaLeo/publish-vscode-extension@v1
+      with:
+        pat: ${{ secrets.VSCODE_MARKETPLACE_PAT }}
+        registryUrl: https://marketplace.visualstudio.com
+        packagePath: editors/code
+    - name: upload extension
+      uses: actions/upload-artifact@v2
+      with:
+          name: aidl-lsp-vscode-extension.zip
+          path: |
+              ${{ steps.publishVsix.outputs.vsixPath }}
+
