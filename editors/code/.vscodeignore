@@ -1,0 +1,9 @@
+*
+!icon.png
+!language-configuration.json
+!LICENSE
+!out/extension.js
+!package-lock.json
+!package.json
+!aidl.tmLanguage.json
+!README.md
