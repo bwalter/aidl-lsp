@@ -1,7 +1,5 @@
 # AIDL Language Server Protocol (LSP) server
 
-Experimental AIDL LSP server based on [rust-aidl-parser](https://github.com/bwalter/rust-aidl-parser).
-
 Features:
 - diagnostics
 - workspace symbols (Ctrl+T in vscode)

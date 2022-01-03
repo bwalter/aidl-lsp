@@ -4,7 +4,7 @@
 	"description": "AIDL language extension for vscode",
 	"author": "Benoit Walter",
 	"license": "MIT",
-	"version": "0.1.3",
+	"version": "0.1.4",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/bwalter/aidl-lsp"

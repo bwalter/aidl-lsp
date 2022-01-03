@@ -46,13 +46,16 @@ fn do_index(global_state: &mut GlobalState) -> Result<()> {
         });
 
     aidl_file_entries.try_for_each(|e| {
-        let path = std::fs::canonicalize(e.path())?;
+        // As std::fs::canonicalize() leads to some issues on Windows because it returns UNC
+        // paths which are not properly handled, we use another version (dunce)
+        // (see https://lib.rs/crates/dunce for more info)
+        let path = dunce::canonicalize(e.path())?;
 
         let mut file = File::open(&path)?;
         let mut buffer = String::new();
         file.read_to_string(&mut buffer)?;
 
-        tracing::debug!("Parsing {:?}", e.path());
+        tracing::debug!("Parsing {:?}", path);
         let uri = lsp_types::Url::from_file_path(&path).unwrap();
         global_state.parser.add_content(uri, &buffer);
 
