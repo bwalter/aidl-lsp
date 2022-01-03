@@ -56,8 +56,7 @@ fn do_index(global_state: &mut GlobalState) -> Result<()> {
         file.read_to_string(&mut buffer)?;
 
         tracing::debug!("Parsing {:?}", path);
-        let uri = lsp_types::Url::from_file_path(&path).unwrap();
-        global_state.parser.add_content(uri, &buffer);
+        global_state.parser.add_content(path, &buffer);
 
         Ok(()) as Result<()>
     })?;
@@ -69,7 +68,7 @@ fn do_index(global_state: &mut GlobalState) -> Result<()> {
         .filter_map(|(id, fr)| fr.ast.as_ref().map(|f| (f.get_key(), id.clone())))
         .collect();
 
-    notify_diagnostics(global_state);
+    notify_diagnostics(global_state)?;
 
     Ok(())
 }
@@ -95,7 +94,7 @@ pub fn update_content(
 ) -> Result<()> {
     let parser = &mut global_state.parser;
 
-    parser.add_content(uri.clone(), content);
+    parser.add_content(utils::uri_to_path(uri)?, content);
     global_state.file_results = parser.validate();
     global_state.items_by_key = global_state
         .file_results
@@ -103,22 +102,22 @@ pub fn update_content(
         .filter_map(|(id, fr)| fr.ast.as_ref().map(|f| (f.get_key(), id.clone())))
         .collect();
 
-    notify_diagnostics(global_state);
-    notify_diagnostics(global_state);
+    notify_diagnostics(global_state)?;
 
     Ok(())
 }
 
-fn notify_diagnostics(global_state: &GlobalState) {
+fn notify_diagnostics(global_state: &GlobalState) -> Result<()> {
     for res in global_state.file_results.values() {
-        let uri = &res.id;
+        let path = &res.id;
+        let uri = utils::path_to_uri(path)?;
 
         let diagnostics = res
             .diagnostics
             .iter()
             .map(|d| {
                 let main_location = lsp_types::Location {
-                    uri: res.id.clone(),
+                    uri: uri.clone(),
                     range: utils::to_lsp_range(&d.range),
                 };
 
@@ -144,7 +143,7 @@ fn notify_diagnostics(global_state: &GlobalState) {
                     .chain(d.related_infos.iter().map(|ri| {
                         lsp_types::DiagnosticRelatedInformation {
                             location: lsp_types::Location {
-                                uri: res.id.clone(),
+                                uri: uri.clone(),
                                 range: utils::to_lsp_range(&ri.range),
                             },
                             message: ri.message.clone(),
@@ -184,4 +183,6 @@ fn notify_diagnostics(global_state: &GlobalState) {
             .send(lsp_server::Message::Notification(notif))
             .unwrap();
     }
+
+    Ok(())
 }

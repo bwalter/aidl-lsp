@@ -1,3 +1,5 @@
+use std::path::{Path, PathBuf};
+
 use aidl_parser::{ast, symbol::Symbol};
 use anyhow::Result;
 
@@ -33,13 +35,19 @@ pub fn get_target_link(
         .get(target_item_key)
         .map(|target_uri| global_state.file_results.get(target_uri))
         .flatten()
-        .map(|fr| fr.ast.as_ref().map(|file| (&fr.id, file)))
+        .map(|fr| fr.ast.as_ref().map(|ast| (&fr.id, ast)))
         .flatten()
-        .map(|(uri, file)| lsp_types::LocationLink {
+        .map(|(path, ast)| {
+            lsp_types::Url::from_file_path(path)
+                .ok()
+                .map(|uri| (uri, ast))
+        })
+        .flatten()
+        .map(|(uri, ast)| lsp_types::LocationLink {
             origin_selection_range: Some(to_lsp_range(origin_range)),
-            target_uri: uri.clone(),
-            target_range: to_lsp_range(file.item.get_full_range()),
-            target_selection_range: to_lsp_range(file.item.get_symbol_range()),
+            target_uri: uri,
+            target_range: to_lsp_range(ast.item.get_full_range()),
+            target_selection_range: to_lsp_range(ast.item.get_symbol_range()),
         })
 }
 
@@ -115,19 +123,32 @@ fn to_lsp_symbol_kind(symbol: &Symbol) -> Option<lsp_types::SymbolKind> {
 
 pub fn get_file_results<'a>(
     global_state: &'a GlobalState,
-    uri: &lsp_types::Url,
-) -> Result<&'a aidl_parser::ParseFileResult<lsp_types::Url>> {
+    path: &Path,
+) -> Result<&'a aidl_parser::ParseFileResult<PathBuf>> {
     let fr = global_state
         .file_results
-        .get(uri)
+        .get(path)
         .ok_or_else(|| -> anyhow::Error {
-            anyhow::anyhow!(
-                "File not found: `{:?}`",
-                uri.to_file_path()
-                    .map(|pb| pb.to_string_lossy().into_owned())
-                    .unwrap_or_else(|_| String::from("<invalid local path>"))
-            )
+            anyhow::anyhow!("File not found: `{}`", path.to_string_lossy())
         })?;
 
     Ok(fr)
+}
+
+pub fn uri_to_path(uri: &lsp_types::Url) -> Result<PathBuf> {
+    let path = uri
+        .to_file_path()
+        .map_err(|_| anyhow::anyhow!("Invalid path: {}", uri.path()))?;
+
+    // As std::fs::canonicalize() leads to some issues on Windows because it returns UNC
+    // paths which are not properly handled, we use another version (dunce)
+    // (see https://lib.rs/crates/dunce for more info)
+    let path = dunce::canonicalize(path.clone()).unwrap_or(path);
+
+    Ok(path)
+}
+
+pub fn path_to_uri(path: &Path) -> Result<lsp_types::Url> {
+    lsp_types::Url::from_file_path(path)
+        .map_err(|_| anyhow::anyhow!("Invalid path: {}", path.to_string_lossy()))
 }

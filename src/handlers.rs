@@ -40,7 +40,8 @@ pub fn handle_workspace_symbol(
     global_state
         .file_results
         .iter()
-        .filter_map(|(uri, fr)| fr.ast.as_ref().map(|fr| (uri, fr)))
+        .filter_map(|(path, fr)| fr.ast.as_ref().map(|fr| (path, fr)))
+        .filter_map(|(path, ast)| utils::path_to_uri(path).ok().map(|uri| (uri, ast)))
         .for_each(|(uri, ast)| {
             aidl_parser::traverse::walk_symbols(ast, symbol_filter, |symbol| {
                 // Filter by name
@@ -70,7 +71,8 @@ pub fn handle_document_symbol(
         anyhow::bail!("Cannot handle document symbol request: workspace has not been indexed!");
     }
 
-    let file_results = utils::get_file_results(global_state, &params.text_document.uri)?;
+    let path = utils::uri_to_path(&params.text_document.uri)?;
+    let file_results = utils::get_file_results(global_state, &path)?;
 
     let ast = match &file_results.ast {
         Some(f) => f,
@@ -151,10 +153,8 @@ pub fn handle_hover(
         anyhow::bail!("Cannot handle hover request: workspace has not been indexed!");
     }
 
-    let file_results = utils::get_file_results(
-        global_state,
-        &params.text_document_position_params.text_document.uri,
-    )?;
+    let path = utils::uri_to_path(&params.text_document_position_params.text_document.uri)?;
+    let file_results = utils::get_file_results(global_state, &path)?;
 
     let ast = match &file_results.ast {
         Some(f) => f,
@@ -225,10 +225,8 @@ pub fn handle_goto_definition(
         anyhow::bail!("Cannot handle goto definition request: workspace has not been indexed!");
     }
 
-    let file_results = utils::get_file_results(
-        global_state,
-        &params.text_document_position_params.text_document.uri,
-    )?;
+    let path = utils::uri_to_path(&params.text_document_position_params.text_document.uri)?;
+    let file_results = utils::get_file_results(global_state, &path)?;
 
     let file = match &file_results.ast {
         Some(f) => f,

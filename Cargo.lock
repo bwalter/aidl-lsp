@@ -13,7 +13,7 @@ dependencies = [
 
 [[package]]
 name = "aidl-lsp"
-version = "0.1.5"
+version = "0.1.7"
 dependencies = [
  "aidl-parser",
  "anyhow",

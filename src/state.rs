@@ -5,9 +5,9 @@ pub struct GlobalState {
     pub indexing_state: IndexingState,
     pub sender: crossbeam::channel::Sender<lsp_server::Message>,
     pub root_path: Option<PathBuf>,
-    pub parser: Parser<lsp_types::Url>,
-    pub file_results: HashMap<lsp_types::Url, ParseFileResult<lsp_types::Url>>,
-    pub items_by_key: HashMap<ast::ItemKey, lsp_types::Url>,
+    pub parser: Parser<PathBuf>,
+    pub file_results: HashMap<PathBuf, ParseFileResult<PathBuf>>,
+    pub items_by_key: HashMap<ast::ItemKey, PathBuf>,
 }
 
 impl GlobalState {

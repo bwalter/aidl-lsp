@@ -1,6 +1,6 @@
 [package]
 name = "aidl-lsp"
-version = "0.1.5"
+version = "0.1.7"
 authors = ["Benoit Walter <b.walter@meerun.de>"]
 license = "MIT"
 edition = "2021"
