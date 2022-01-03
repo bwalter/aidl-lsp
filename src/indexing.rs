@@ -46,12 +46,14 @@ fn do_index(global_state: &mut GlobalState) -> Result<()> {
         });
 
     aidl_file_entries.try_for_each(|e| {
-        let mut file = File::open(e.path())?;
+        let path = std::fs::canonicalize(e.path())?;
+
+        let mut file = File::open(&path)?;
         let mut buffer = String::new();
         file.read_to_string(&mut buffer)?;
 
         tracing::debug!("Parsing {:?}", e.path());
-        let uri = lsp_types::Url::from_file_path(&e.path()).unwrap();
+        let uri = lsp_types::Url::from_file_path(&path).unwrap();
         global_state.parser.add_content(uri, &buffer);
 
         Ok(()) as Result<()>

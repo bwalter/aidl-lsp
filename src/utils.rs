@@ -1,4 +1,5 @@
 use aidl_parser::{ast, symbol::Symbol};
+use anyhow::Result;
 
 use crate::state::GlobalState;
 
@@ -110,4 +111,23 @@ fn to_lsp_symbol_kind(symbol: &Symbol) -> Option<lsp_types::SymbolKind> {
         Symbol::EnumElement(_) => lsp_types::SymbolKind::ENUM_MEMBER,
         Symbol::Type(_) => return None,
     })
+}
+
+pub fn get_file_results<'a>(
+    global_state: &'a GlobalState,
+    uri: &lsp_types::Url,
+) -> Result<&'a aidl_parser::ParseFileResult<lsp_types::Url>> {
+    let fr = global_state
+        .file_results
+        .get(uri)
+        .ok_or_else(|| -> anyhow::Error {
+            anyhow::anyhow!(
+                "File not found: `{:?}`",
+                uri.to_file_path()
+                    .map(|pb| pb.to_string_lossy().into_owned())
+                    .unwrap_or_else(|_| String::from("<invalid local path>"))
+            )
+        })?;
+
+    Ok(fr)
 }

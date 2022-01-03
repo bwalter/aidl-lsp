@@ -1,7 +1,7 @@
 use aidl_parser::symbol::Symbol;
 use aidl_parser::traverse;
 use aidl_parser::traverse::SymbolFilter;
-use anyhow::{Context, Result};
+use anyhow::Result;
 
 use crate::indexing;
 use crate::state::{GlobalState, IndexingState};
@@ -70,10 +70,7 @@ pub fn handle_document_symbol(
         anyhow::bail!("Cannot handle document symbol request: workspace has not been indexed!");
     }
 
-    let file_results = global_state
-        .file_results
-        .get(&params.text_document.uri)
-        .context("File not found")?;
+    let file_results = utils::get_file_results(global_state, &params.text_document.uri)?;
 
     let ast = match &file_results.ast {
         Some(f) => f,
@@ -154,10 +151,10 @@ pub fn handle_hover(
         anyhow::bail!("Cannot handle hover request: workspace has not been indexed!");
     }
 
-    let file_results = global_state
-        .file_results
-        .get(&params.text_document_position_params.text_document.uri)
-        .context("File not found")?;
+    let file_results = utils::get_file_results(
+        global_state,
+        &params.text_document_position_params.text_document.uri,
+    )?;
 
     let ast = match &file_results.ast {
         Some(f) => f,
@@ -228,10 +225,10 @@ pub fn handle_goto_definition(
         anyhow::bail!("Cannot handle goto definition request: workspace has not been indexed!");
     }
 
-    let file_results = global_state
-        .file_results
-        .get(&params.text_document_position_params.text_document.uri)
-        .context("File not found")?;
+    let file_results = utils::get_file_results(
+        global_state,
+        &params.text_document_position_params.text_document.uri,
+    )?;
 
     let file = match &file_results.ast {
         Some(f) => f,
