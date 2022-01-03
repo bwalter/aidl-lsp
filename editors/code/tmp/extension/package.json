@@ -1,15 +1,15 @@
 {
-	"name": "AIDL for VSCode",
+	"name": "aidl-vscode",
 	"description": "AIDL extension for vscode",
 	"author": "Benoit Walter",
 	"license": "MIT",
-	"version": "0.1.2",
+	"version": "0.1.0",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/bwalter/aidl-lsp"
 	},
-	"publisher": "bwalter",
-	"categories": ["Programming Languages"],
+	"publisher": "bw089",
+	"categories": [],
 	"keywords": [],
 	"preview": true,
 	"engines": {
