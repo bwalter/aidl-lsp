@@ -33,9 +33,9 @@ dependencies = [
 
 [[package]]
 name = "aidl-parser"
-version = "0.7.2"
+version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2c86194c7304d3f0bcf9bd4a9e535a7d8ecffac9cbd02825cbd6cf687983e5f6"
+checksum = "71785af819b90d5b5b79303267685578f8663bb80029baad95d57842ae8934b2"
 dependencies = [
  "anyhow",
  "derive_builder",
