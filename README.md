@@ -10,6 +10,8 @@ Features:
 
 TODO:
 - handle watched files
+- type definition
+- semantic syntax highlighting
 
 For language-specific features, see [rust-aidl-parser](https://github.com/bwalter/rust-aidl-parser).
 
