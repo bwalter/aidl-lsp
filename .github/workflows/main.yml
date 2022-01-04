@@ -90,13 +90,13 @@ jobs:
       working-directory: editors/code
       run: npm install
     - name: publish to Visual Studio Marketplace
+      if: startsWith(github.ref, 'refs/tags/v')
       id: publishVsix
       uses: HaaLeo/publish-vscode-extension@v1
       with:
         pat: ${{ secrets.VSCODE_MARKETPLACE_PAT }}
         registryUrl: https://marketplace.visualstudio.com
         packagePath: editors/code
-        dryRun: false == startsWith(github.ref, 'refs/tags/v')
     - name: upload extension
       if: startsWith(github.ref, 'refs/tags/v')
       uses: actions/upload-artifact@v2
