@@ -4,7 +4,7 @@
 !syntaxes/aidl.tmLanguage.json
 !LICENSE
 !bin/*
-!out/extension.js
+!out/main.js
 !package-lock.json
 !package.json
 !aidl.tmLanguage.json
