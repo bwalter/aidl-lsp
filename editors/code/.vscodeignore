@@ -1,6 +1,7 @@
 **
 !icon.png
 !language-configuration.json
+!syntaxes/aidl.tmLanguage.json
 !LICENSE
 !out/extension.js
 !package-lock.json

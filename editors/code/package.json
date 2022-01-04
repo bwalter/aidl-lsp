@@ -3,7 +3,7 @@
 	"displayName": "AIDL for VSCode",
 	"description": "AIDL language extension for vscode",
 	"author": "Benoit Walter",
-	"license": "MIT",
+  "license": "MIT and Apache-2.0",
 	"version": "0.1.9",
 	"repository": {
 		"type": "git",
@@ -39,7 +39,7 @@
     "grammars": [{
       "language": "aidl",
       "scopeName": "source.aidl",
-      "path": "./aidl.tmLanguage.json"
+      "path": "./syntax/aidl.tmLanguage.json"
     }]
 	},
 	"scripts": {
