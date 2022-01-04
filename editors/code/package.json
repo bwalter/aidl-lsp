@@ -4,7 +4,7 @@
 	"description": "AIDL language extension for vscode",
 	"author": "Benoit Walter",
   "license": "MIT and Apache-2.0",
-	"version": "0.1.10",
+	"version": "0.1.11",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/bwalter/aidl-lsp"
@@ -39,7 +39,7 @@
     "grammars": [{
       "language": "aidl",
       "scopeName": "source.aidl",
-      "path": "./syntax/aidl.tmLanguage.json"
+      "path": "./syntaxes/aidl.tmLanguage.json"
     }]
 	},
 	"scripts": {
