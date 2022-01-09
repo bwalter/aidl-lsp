@@ -107,17 +107,17 @@ pub fn to_lsp_doc_symbol(symbol: &Symbol) -> Option<lsp_types::DocumentSymbol> {
 
 fn to_lsp_symbol_kind(symbol: &Symbol) -> Option<lsp_types::SymbolKind> {
     Some(match symbol {
-        Symbol::Package(_) => lsp_types::SymbolKind::PACKAGE,
-        Symbol::Import(_) => lsp_types::SymbolKind::PACKAGE,
-        Symbol::Interface(_) => lsp_types::SymbolKind::INTERFACE,
-        Symbol::Parcelable(_) => lsp_types::SymbolKind::STRUCT,
-        Symbol::Enum(_) => lsp_types::SymbolKind::ENUM,
-        Symbol::Method(_) => lsp_types::SymbolKind::METHOD,
-        Symbol::Arg(_) => return None,
-        Symbol::Const(_) => lsp_types::SymbolKind::CONSTANT,
-        Symbol::Member(_) => lsp_types::SymbolKind::FIELD,
-        Symbol::EnumElement(_) => lsp_types::SymbolKind::ENUM_MEMBER,
-        Symbol::Type(_) => return None,
+        Symbol::Package(..) => lsp_types::SymbolKind::PACKAGE,
+        Symbol::Import(..) => lsp_types::SymbolKind::PACKAGE,
+        Symbol::Interface(..) => lsp_types::SymbolKind::INTERFACE,
+        Symbol::Parcelable(..) => lsp_types::SymbolKind::STRUCT,
+        Symbol::Enum(..) => lsp_types::SymbolKind::ENUM,
+        Symbol::Method(..) => lsp_types::SymbolKind::METHOD,
+        Symbol::Arg(..) => return None,
+        Symbol::Const(..) => lsp_types::SymbolKind::CONSTANT,
+        Symbol::Field(..) => lsp_types::SymbolKind::FIELD,
+        Symbol::EnumElement(..) => lsp_types::SymbolKind::ENUM_MEMBER,
+        Symbol::Type(..) => return None,
     })
 }
 

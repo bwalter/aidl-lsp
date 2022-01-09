@@ -1,6 +1,6 @@
 use aidl_parser::symbol::Symbol;
-use aidl_parser::traverse;
 use aidl_parser::traverse::SymbolFilter;
+use aidl_parser::{ast, traverse};
 use anyhow::Result;
 
 use crate::indexing;
@@ -43,7 +43,7 @@ pub fn handle_workspace_symbol(
         .filter_map(|(path, fr)| fr.ast.as_ref().map(|fr| (path, fr)))
         .filter_map(|(path, ast)| utils::path_to_uri(path).ok().map(|uri| (uri, ast)))
         .for_each(|(uri, ast)| {
-            aidl_parser::traverse::walk_symbols(ast, symbol_filter, |symbol| {
+            traverse::walk_symbols(ast, symbol_filter, |symbol| {
                 // Filter by name
                 match symbol.get_name() {
                     Some(n) if n.to_lowercase().contains(&name_filter) => (),
@@ -88,21 +88,21 @@ pub fn handle_document_symbol(
         None,
     }
 
-    aidl_parser::traverse::walk_symbols(ast, SymbolFilter::ItemsAndItemElements, |symbol| {
+    traverse::walk_symbols(ast, SymbolFilter::ItemsAndItemElements, |symbol| {
         // Convert to LSP symbol and add it to the tree
         if let Some(doc_symbol) = utils::to_lsp_doc_symbol(&symbol) {
             let symbol_def = match symbol {
-                aidl_parser::symbol::Symbol::Package(_) => SymbolDef::TopLevel,
-                aidl_parser::symbol::Symbol::Import(_) => SymbolDef::TopLevel,
-                aidl_parser::symbol::Symbol::Interface(_) => SymbolDef::TopLevel,
-                aidl_parser::symbol::Symbol::Parcelable(_) => SymbolDef::TopLevel,
-                aidl_parser::symbol::Symbol::Enum(_) => SymbolDef::TopLevel,
-                aidl_parser::symbol::Symbol::Method(_) => SymbolDef::Child,
-                aidl_parser::symbol::Symbol::Arg(_) => SymbolDef::None,
-                aidl_parser::symbol::Symbol::Const(_) => SymbolDef::Child,
-                aidl_parser::symbol::Symbol::Member(_) => SymbolDef::Child,
-                aidl_parser::symbol::Symbol::EnumElement(_) => SymbolDef::Child,
-                aidl_parser::symbol::Symbol::Type(_) => SymbolDef::None,
+                Symbol::Package(..) => SymbolDef::TopLevel,
+                Symbol::Import(..) => SymbolDef::TopLevel,
+                Symbol::Interface(..) => SymbolDef::TopLevel,
+                Symbol::Parcelable(..) => SymbolDef::TopLevel,
+                Symbol::Enum(..) => SymbolDef::TopLevel,
+                Symbol::Method(..) => SymbolDef::Child,
+                Symbol::Arg(..) => SymbolDef::None,
+                Symbol::Const(..) => SymbolDef::Child,
+                Symbol::Field(..) => SymbolDef::Child,
+                Symbol::EnumElement(..) => SymbolDef::Child,
+                Symbol::Type(..) => SymbolDef::None,
             };
 
             match symbol_def {
@@ -165,41 +165,27 @@ pub fn handle_hover(
     let hover =
         traverse::find_symbol_at_line_col(ast, traverse::SymbolFilter::All, target_line_col).map(
             |smb| {
-                let signature: Option<String> = if let Symbol::Type(t) = smb {
-                    t.definition.as_ref().map(|def| {
-                        global_state
-                            .items_by_key
-                            .get(def)
-                            .map(|target_uri| global_state.file_results.get(target_uri))
-                            .flatten()
-                            .map(|fr| fr.ast.as_ref())
-                            .flatten()
-                            .map(|ast| &ast.item)
-                            .map(|item| match &item {
-                                aidl_parser::ast::Item::Interface(i) => {
-                                    Symbol::Interface(i).get_signature()
-                                }
-                                aidl_parser::ast::Item::Parcelable(p) => {
-                                    Symbol::Parcelable(p).get_signature()
-                                }
-                                aidl_parser::ast::Item::Enum(e) => Symbol::Enum(e).get_signature(),
-                            })
-                            .flatten()
-                            .unwrap_or_default()
+                let signature: Option<String> = if let Symbol::Type(ast::Type {
+                    kind: ast::TypeKind::Resolved(qualified_name, Some(item_kind)),
+                    ..
+                }) = smb
+                {
+                    let name = qualified_name.split('.').last().unwrap_or("");
+                    Some(match item_kind {
+                        ast::ItemKind::Interface => format!("interface {}", name),
+                        ast::ItemKind::Parcelable => format!("parcelable {}", name),
+                        ast::ItemKind::Enum => format!("enum {}", name),
                     })
                 } else {
                     None
                 };
 
-                let signature = signature.unwrap_or_else(|| {
-                    smb.get_signature()
-                        .unwrap_or_else(|| smb.get_name().unwrap_or_default())
-                });
+                let signature = signature.unwrap_or_else(|| smb.get_signature());
 
                 let markdown = lsp_types::MarkupContent {
                     kind: lsp_types::MarkupKind::Markdown,
                     value: [
-                        &smb.get_name().unwrap_or_default(),
+                        &smb.get_qualified_name().unwrap_or_default(),
                         "```aidl",
                         &signature,
                         "```",
@@ -238,12 +224,15 @@ pub fn handle_goto_definition(
     let link = traverse::find_symbol_at_line_col(file, SymbolFilter::All, pos)
         .map(|symbol| {
             let key_and_range = match symbol {
-                aidl_parser::symbol::Symbol::Import(i) => {
-                    Some((i.get_qualified_name(), &i.symbol_range))
-                }
-                aidl_parser::symbol::Symbol::Type(t) => {
-                    t.definition.as_ref().map(|d| (d.clone(), &t.symbol_range))
-                }
+                Symbol::Import(i) => Some((i.get_qualified_name(), &i.symbol_range)),
+                Symbol::Type(
+                    t
+                    @
+                    ast::Type {
+                        kind: ast::TypeKind::Resolved(qualified_name, _),
+                        ..
+                    },
+                ) => Some((qualified_name.clone(), &t.symbol_range)),
                 _ => None,
             };
 
